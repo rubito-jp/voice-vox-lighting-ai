@@ -1,0 +1,5 @@
+﻿voicevox-lightning.theheai.com {
+    respond /test "Caddy is alive" 200
+    reverse_proxy voicevox-wrapper:8000
+    tls binhkid2@gmail.com
+}

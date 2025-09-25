@@ -1,0 +1,44 @@
+﻿version: "3.9"
+
+services:
+  voicevox-engine:
+    image: voicevox/voicevox_engine:nvidia-ubuntu20.04-latest
+    container_name: voicevox-engine
+    restart: unless-stopped
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    ports:
+      - "50021:50021"
+    volumes:
+      - voicevox_cache:/root/.cache/voicevox_engine
+    runtime: nvidia   # 👈 dùng cái này thay cho device_requests
+
+  voicevox-wrapper:
+    build: ./wrapper
+    container_name: voicevox-wrapper
+    restart: unless-stopped
+    depends_on:
+      - voicevox-engine
+    environment:
+      - VOICEVOX_ENGINE_URL=http://voicevox-engine:50021
+    ports:
+      - "8000:8000"
+
+  caddy:
+    image: caddy:2.7.6-alpine
+    restart: unless-stopped
+    depends_on:
+      - voicevox-wrapper
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  voicevox_cache:
+  caddy_data:
+  caddy_config:
